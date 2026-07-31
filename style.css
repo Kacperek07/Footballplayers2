@@ -1,0 +1,54 @@
+body{
+    background-image: url(site_background.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: white;
+}
+header{
+    display: flex;
+    flex-direction: row;
+    background-color: black;
+    color: white;
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 8px;
+    border: 1px grey;
+}
+nav{
+    width: 50%;
+    text-align: center;
+    padding: auto 25%;
+    margin: auto;
+}
+header section{
+    width: 25%;
+    margin: auto;
+    text-align: center;
+}
+nav a{
+    text-decoration: none;
+    color: white;
+    font-size: 20px;
+    padding: 8px;
+}
+nav a:hover{
+    text-decoration: underline green;
+    text-underline-offset: 8px;
+}
+#container{
+    display: flex;
+    flex-direction: column;
+}
+#box{
+    display: flex;
+    margin: 1% auto;
+    width: 100%;
+    background-color: black;
+    text-align: center;
+}
+.all_info{
+    width: 50%;
+    margin: auto;
+    display: flex;
+}

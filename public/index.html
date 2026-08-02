@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess The Player - Piłkarska gra</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .logo-icon {
+            font-size: 40px;
+        }
+
+        h1 {
+            font-size: 3em;
+            background: linear-gradient(90deg, #e94560 0%, #f39c12 50%, #e94560 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            text-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: #b8c5d6;
+            margin-top: 10px;
+        }
+
+        .game-container {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .game-container.active {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .game-container.active {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .player-image-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(233, 69, 96, 0.3);
+        }
+
+        .player-image {
+            width: 100%;
+            aspect-ratio: 3/4;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            filter: blur(40px);
+            opacity: 0.8;
+            position: relative;
+            overflow: hidden;
+            transition: filter 0.4s ease;
+        }
+
+        .player-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .score-card-menu {
+            max-width: 420px;
+            margin: 0 auto 25px;
+            text-align: center;
+        }
+
+        .player-image.revealed {
+            filter: blur(0px);
+            opacity: 1;
+        }
+
+        .attempts-bar {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #e94560;
+        }
+
+        .attempts-label {
+            font-size: 0.9em;
+            color: #b8c5d6;
+            margin-bottom: 10px;
+        }
+
+        .attempts-visual {
+            display: flex;
+            gap: 8px;
+        }
+
+        .attempt {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #b8c5d6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+        }
+
+        .attempt.used {
+            background: #e94560;
+            border-color: #e94560;
+            color: #fff;
+        }
+
+        .attempt.remaining {
+            background: rgba(35, 198, 109, 0.2);
+            border-color: #23c66d;
+        }
+
+        .game-info {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(233, 69, 96, 0.2);
+        }
+
+        .score-section {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 0.9em;
+            color: #b8c5d6;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-value {
+            font-size: 2.5em;
+            font-weight: 800;
+            color: #f39c12;
+            text-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        .score-card-menu {
+            padding: 20px 25px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            border: 1px solid rgba(243, 156, 18, 0.2);
+        }
+
+        .score-small {
+            margin-top: 10px;
+            color: #d4d4d8;
+            font-size: 0.95em;
+        }
+
+        .points-table-card {
+            margin-top: 20px;
+            padding: 20px 25px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .points-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            color: #fff;
+        }
+
+        .points-table th,
+        .points-table td {
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            text-align: left;
+            font-size: 0.95em;
+        }
+
+        .points-table th {
+            color: #f5c25b;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .points-table tbody tr:nth-child(odd) {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .points-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .search-section {
+            position: relative;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(233, 69, 96, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #e94560;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-suggestions {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(22, 33, 62, 0.95);
+            border-radius: 10px;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 2000;
+            margin-bottom: 5px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .search-suggestion {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(233, 69, 96, 0.1);
+            transition: background 0.2s ease;
+        }
+
+        .search-suggestion:hover {
+            background: rgba(233, 69, 96, 0.2);
+        }
+
+        .search-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .suggestion-club {
+            font-size: 0.85em;
+            color: #b8c5d6;
+            margin-top: 3px;
+        }
+
+        .hints-section {
+            display: none;
+        }
+
+        .hints-section.active {
+            display: block;
+        }
+
+        .hints-title {
+            font-size: 0.9em;
+            color: #b8c5d6;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hints-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .hints-grid-visual {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .hint {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid #b8c5d6;
+            font-size: 0.9em;
+        }
+
+        .hint-label {
+            color: #b8c5d6;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hint-value {
+            color: #fff;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .hint.correct {
+            background: rgba(35, 198, 109, 0.2);
+            border-color: #23c66d;
+        }
+
+        .hint.correct .hint-value {
+            color: #23c66d;
+        }
+
+        /* Visual Hints */
+        .hint-visual {
+            position: relative;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            overflow: hidden;
+            transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            cursor: default;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px;
+            min-height: 150px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+
+        .hint-visual-image {
+            min-height: 64px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hint-visual-image img {
+            width: 100%;
+            max-width: 90px;
+            max-height: 70px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .hint-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.3rem;
+            transition: background 0.25s ease;
+        }
+
+        .hint-visual.correct {
+            background: rgba(35, 198, 109, 0.15);
+            border-color: #23c66d;
+            box-shadow: 0 0 15px rgba(35, 198, 109, 0.3);
+        }
+
+        .hint-visual img {
+            max-width: 100%;
+            max-height: 70px;
+            object-fit: contain;
+            filter: grayscale(100%);
+            transition: filter 0.3s ease;
+        }
+
+        .hint-visual.correct img {
+            filter: grayscale(0%);
+        }
+
+        .hint-visual-label {
+            font-size: 0.75em;
+            color: #b8c5d6;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .hint-visual.correct .hint-visual-label {
+            color: #23c66d;
+        }
+
+        .hint-visual-value {
+            font-size: 0.85em;
+            color: #fff;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .hint-visual.correct .hint-visual-value {
+            color: #23c66d;
+        }
+
+        /* Guessed Players Section */
+        .guessed-players-section {
+            display: none;
+        }
+
+        .guessed-players-section.active {
+            display: block;
+        }
+
+        .guessed-title {
+            font-size: 0.9em;
+            color: #b8c5d6;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .guessed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .guessed-item {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #e94560;
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .guessed-item-icon {
+            font-size: 1.2em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #e94560, #f39c12);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid rgba(233, 69, 96, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(233, 69, 96, 0.2);
+            border-color: #e94560;
+        }
+
+        .menu-screen {
+            text-align: center;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .menu-screen.hidden {
+            display: none;
+        }
+
+        .menu-buttons {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .menu-btn {
+            padding: 20px 40px;
+            font-size: 1.2em;
+            border-radius: 15px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .menu-btn-play {
+            background: linear-gradient(90deg, #e94560, #f39c12);
+            color: #fff;
+            box-shadow: 0 8px 25px rgba(233, 69, 96, 0.4);
+        }
+
+        .menu-btn-play:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(233, 69, 96, 0.5);
+        }
+
+        .game-over-screen {
+            display: none;
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .game-over-screen.active {
+            display: block;
+        }
+
+        .game-over-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            margin-top: 40px;
+        }
+
+        .game-over-content {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 40px 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(233, 69, 96, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .player-answer {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .player-answer-name {
+            color: #f39c12;
+            font-weight: 800;
+        }
+
+        .final-score {
+            font-size: 3em;
+            font-weight: 800;
+            color: #23c66d;
+            margin: 20px 0;
+            text-shadow: 0 4px 15px rgba(35, 198, 109, 0.4);
+        }
+
+        .game-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            font-size: 0.95em;
+        }
+
+        .stat-item {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 3px solid #e94560;
+        }
+
+        .stat-label {
+            color: #b8c5d6;
+            font-size: 0.85em;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #fff;
+            margin-top: 5px;
+            font-size: 1.3em;
+        }
+
+        .menu-buttons-bottom {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .menu-btn-small {
+            padding: 15px 30px;
+            font-size: 1em;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .menu-btn-play-again {
+            background: linear-gradient(90deg, #e94560, #f39c12);
+            color: #fff;
+        }
+
+        .menu-btn-play-again:hover {
+            transform: translateY(-3px);
+        }
+
+        .menu-btn-menu {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid rgba(233, 69, 96, 0.3);
+        }
+
+        .menu-btn-menu:hover {
+            background: rgba(233, 69, 96, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .blur-info {
+            font-size: 0.85em;
+            color: #b8c5d6;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid #f39c12;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .search-suggestions {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(233, 69, 96, 0.3) transparent;
+        }
+
+        /* Notification Toast */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(233, 69, 96, 0.95);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+            animation: slideInRight 0.4s ease-out;
+            z-index: 1000;
+            max-width: 350px;
+            word-wrap: break-word;
+        }
+
+        .notification.success {
+            background: rgba(35, 198, 109, 0.95);
+        }
+
+        .notification.error {
+            background: rgba(233, 69, 96, 0.95);
+        }
+
+        .notification.info {
+            background: rgba(243, 156, 18, 0.95);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+
+        .notification.hide {
+            animation: slideOutRight 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <span class="logo-icon">⚽</span>
+                <h1>GUESS THE PLAYER</h1>
+            </div>
+            <p class="subtitle">Zgadnij zawodnika po zamazanym zdjęciu</p>
+        </header>
+
+        <!-- Menu Screen -->
+        <div class="menu-screen" id="menuScreen">
+            <div style="margin-top: 60px;">
+                <div class="info-card score-section score-card-menu">
+                    <div class="score-label">Startowe punkty</div>
+                    <div class="score-value" id="score">100</div>
+                    <div class="score-small">Punkty nadal są liczone według obecnego schematu.</div>
+                </div>
+                <div class="info-card points-table-card">
+                    <div class="score-label">Punkty za próbę</div>
+                    <table class="points-table">
+                        <thead>
+                            <tr><th>Próba</th><th>Punkty</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>100</td></tr>
+                            <tr><td>2</td><td>90</td></tr>
+                            <tr><td>3</td><td>80</td></tr>
+                            <tr><td>4</td><td>70</td></tr>
+                            <tr><td>5</td><td>60</td></tr>
+                            <tr><td>6</td><td>50</td></tr>
+                            <tr><td>7</td><td>40</td></tr>
+                            <tr><td>8</td><td>30</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="font-size: 1.2em; color: #b8c5d6; margin-bottom: 30px;">
+                    Masz <strong>8 prób</strong> aby zgadnąć zawodnika!<br>
+                    Im szybciej zgadniesz, tym więcej punktów zdobędziesz.
+                </p>
+                <div class="menu-buttons">
+                    <button class="menu-btn menu-btn-play" onclick="startGame()">🎮 Graj Teraz</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-container" id="gameContainer">
+            <!-- Left Column -->
+            <div>
+                <div class="player-image-container">
+                    <div class="player-image" id="playerImage">
+                    <img id="playerImageImg" src="/images/placeholder.svg" alt="Player image">
+                </div>
+                    <div class="blur-info">
+                        💡 Zdjęcie staje się wyraźniejsze z każdą poprawną wskazówką!
+                    </div>
+                </div>
+                <div class="attempts-bar">
+                    <div class="attempts-label">Pozostałe próby:</div>
+                    <div class="attempts-visual" id="attemptsVisual"></div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="game-info">
+                <!-- Search -->
+                <div class="info-card search-section">
+                    <div style="position: relative;">
+                        <div class="search-input-wrapper">
+                            <input 
+                                type="text" 
+                                class="search-input" 
+                                id="playerInput" 
+                                placeholder="Wpisz imię lub nazwisko..."
+                                autocomplete="off"
+                            >
+                            <button class="btn btn-primary" style="width: auto; padding: 15px 20px;" onclick="submitGuess()">✓</button>
+                        </div>
+                        <div class="search-suggestions scrollbar-hide" id="suggestions" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Guessed Players Info -->
+                <div class="info-card guessed-players-section" id="guessedPlayersSection" style="display: none;">
+                    <div class="guessed-title">Zgadnięci zawodnicy:</div>
+                    <div class="guessed-list" id="guessedList"></div>
+                </div>
+
+                <!-- Hints with Images -->
+                <div class="info-card hints-section" id="hintsSection">
+                    <div class="hints-title">Wskazówki:</div>
+                    <div class="hints-grid-visual" id="hintsGridVisual">
+                        <div class="hint-visual" id="hint-position">
+                            <div class="hint-visual-image"><div class="hint-icon">👤</div></div>
+                            <div class="hint-visual-label">Pozycja</div>
+                            <div class="hint-visual-value">?</div>
+                        </div>
+                        <div class="hint-visual" id="hint-nationality">
+                            <div class="hint-visual-image"><img src="/images/placeholder.svg" alt="Narodowość"></div>
+                            <div class="hint-visual-label">Narodowość</div>
+                            <div class="hint-visual-value">?</div>
+                        </div>
+                        <div class="hint-visual" id="hint-league">
+                            <div class="hint-visual-image"><img src="/images/placeholder.svg" alt="Liga"></div>
+                            <div class="hint-visual-label">Liga</div>
+                            <div class="hint-visual-value">?</div>
+                        </div>
+                        <div class="hint-visual" id="hint-club">
+                            <div class="hint-visual-image"><img src="/images/placeholder.svg" alt="Klub"></div>
+                            <div class="hint-visual-label">Klub</div>
+                            <div class="hint-visual-value">?</div>
+                        </div>
+                        <div class="hint-visual" id="hint-preferredFoot">
+                            <div class="hint-visual-image"><div class="hint-icon">🦶</div></div>
+                            <div class="hint-visual-label">Lepsza noga</div>
+                            <div class="hint-visual-value">?</div>
+                        </div>
+                        <div class="hint-visual" id="hint-height">
+                            <div class="hint-visual-image"><div class="hint-icon">📏</div></div>
+                            <div class="hint-visual-label">Wzrost</div>
+                            <div class="hint-visual-value">?</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div class="game-over-screen" id="gameOverScreen">
+            <h2 class="game-over-title" id="gameOverTitle">KONIEC GRY!</h2>
+            <div class="game-over-content">
+                <div class="player-answer">
+                    To był: <span class="player-answer-name" id="correctPlayerName">-</span>
+                </div>
+                <div class="final-score" id="finalScore">0</div>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Próby Użyte</div>
+                        <div class="stat-value" id="attemptsUsed">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Wynik</div>
+                        <div class="stat-value" id="resultText">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-buttons-bottom">
+                <button class="menu-btn-small menu-btn-play-again" onclick="startGame()">Graj Ponownie</button>
+                <button class="menu-btn-small menu-btn-menu" onclick="backToMenu()">Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentPlayer: null,
+            attempts: 8,
+            score: 100,
+            revealed: [],
+            lastGuess: null,
+            hints: {
+                position: false,
+                nationality: false,
+                league: false,
+                club: false,
+                preferredFoot: false,
+                height: false
+            },
+            allPlayers: [],
+            gameOver: false
+        };
+
+        function resolveImagePath(value, fallback = '/images/placeholder.svg', folder = null) {
+            if (!value) return fallback;
+            if (/^https?:\/\//i.test(value)) return value;
+            if (folder) return `/images/${folder}/${value}`;
+            return `/images/${value}`;
+        }
+
+        // Initialize
+        async function init() {
+            try {
+                const response = await fetch('/api/players');
+                gameState.allPlayers = await response.json();
+            } catch (error) {
+                console.error('Error loading players:', error);
+            }
+        }
+
+        // Start Game
+        async function startGame() {
+            gameState.attempts = 8;
+            gameState.score = 100;
+            gameState.revealed = [];
+            gameState.lastGuess = null;
+            gameState.hints = {
+                position: false,
+                nationality: false,
+                league: false,
+                club: false,
+                preferredFoot: false,
+                height: false
+            };
+            gameState.gameOver = false;
+
+            // Fetch new player
+            try {
+                const response = await fetch('/api/player/random');
+                gameState.currentPlayer = await response.json();
+            } catch (error) {
+                console.error('Error loading player:', error);
+                return;
+            }
+
+            // Update UI
+            document.getElementById('menuScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.remove('active');
+            document.getElementById('gameContainer').classList.add('active');
+            document.getElementById('playerInput').value = '';
+            document.getElementById('playerInput').focus();
+            document.getElementById('hintsSection').classList.remove('active');
+
+            updateUI();
+        }
+
+        // Back to Menu
+        function backToMenu() {
+            document.getElementById('menuScreen').classList.remove('hidden');
+            document.getElementById('gameOverScreen').classList.remove('active');
+            document.getElementById('gameContainer').classList.remove('active');
+        }
+
+        // Update UI
+        function updateUI() {
+            // Update score
+            document.getElementById('score').textContent = gameState.score;
+
+            // Update attempts
+            const attemptsVisual = document.getElementById('attemptsVisual');
+            attemptsVisual.innerHTML = '';
+            for (let i = 1; i <= 8; i++) {
+                const attempt = document.createElement('div');
+                attempt.className = 'attempt';
+                if (i <= 8 - gameState.attempts) {
+                    attempt.classList.add('used');
+                    attempt.textContent = '✓';
+                } else {
+                    attempt.classList.add('remaining');
+                }
+                attempt.textContent = i;
+                attemptsVisual.appendChild(attempt);
+            }
+
+            const playerImage = document.getElementById('playerImage');
+            const playerImageImg = document.getElementById('playerImageImg');
+            playerImageImg.style.opacity = '0';
+            playerImageImg.onload = () => {
+                playerImageImg.style.opacity = '1';
+            };
+            playerImageImg.onerror = () => {
+                if (playerImageImg.getAttribute('src') !== '/images/placeholder.svg') {
+                    playerImageImg.src = '/images/placeholder.svg';
+                } else {
+                    playerImageImg.style.opacity = '1';
+                }
+            };
+
+            const nextSrc = resolveImagePath(
+                gameState.currentPlayer && gameState.currentPlayer.playerImage,
+                '/images/placeholder.svg',
+                'players'
+            );
+
+            playerImageImg.alt = gameState.currentPlayer && gameState.currentPlayer.playerImage
+                ? gameState.currentPlayer.name
+                : 'Player image';
+
+            if (playerImageImg.getAttribute('src') !== nextSrc) {
+                playerImageImg.src = nextSrc;
+            } else {
+                playerImageImg.style.opacity = '1';
+            }
+
+            // Update image blur based on correct hints
+            const correctHints = Object.values(gameState.hints).filter(h => h).length;
+            if (correctHints >= 5) {
+                playerImage.style.filter = 'blur(0px)';
+                playerImage.classList.add('revealed');
+            } else {
+                const blurAmount = 35 - (correctHints * 4);
+                playerImage.style.filter = `blur(${Math.max(0, blurAmount)}px)`;
+                playerImage.classList.remove('revealed');
+            }
+
+            // Update hints display
+            updateHints();
+        }
+
+        // Update Hints Display with Images
+        function updateHints() {
+            const hintsSection = document.getElementById('hintsSection');
+            const guessedPlayersSection = document.getElementById('guessedPlayersSection');
+
+            const hasAnyHint = Object.values(gameState.hints).some(Boolean);
+            if (hasAnyHint) {
+                hintsSection.classList.add('active');
+            } else {
+                hintsSection.classList.remove('active');
+            }
+
+            if (gameState.revealed.length === 0) {
+                guessedPlayersSection.classList.remove('active');
+            } else {
+                guessedPlayersSection.classList.add('active');
+            }
+
+            const lastGuess = gameState.lastGuess;
+            const getHintValue = (key, suffix = '') => {
+                if (gameState.hints[key]) {
+                    return `${gameState.currentPlayer[key]}${suffix}`;
+                }
+                if (lastGuess && lastGuess[key] != null) {
+                    return `${lastGuess[key]}${suffix}`;
+                }
+                return '?';
+            };
+
+            const getHintImage = (key, defaultPath) => {
+                if (gameState.hints[key]) {
+                    return defaultPath;
+                }
+                if (lastGuess) {
+                    const imageKey = key === 'nationality' ? 'flagImage' : `${key}Image`;
+                    const folder = key === 'club' ? 'clubs' : key === 'nationality' ? 'flags' : key === 'league' ? 'leagues' : '';
+                    if (lastGuess[imageKey]) {
+                        return resolveImagePath(lastGuess[imageKey], '/images/placeholder.svg', folder);
+                    }
+                }
+                return '/images/placeholder.svg';
+            };
+
+            const hintConfigs = [
+                { key: 'position', label: 'Pozycja', icon: '👤', image: false, suffix: '' },
+                { key: 'nationality', label: 'Narodowość', icon: '🏳️', image: true, suffix: '' },
+                { key: 'league', label: 'Liga', icon: '⚽', image: true, suffix: '' },
+                { key: 'club', label: 'Klub', icon: '🏆', image: true, suffix: '' },
+                { key: 'preferredFoot', label: 'Lepsza noga', icon: '🦶', image: false, suffix: '' },
+                { key: 'height', label: 'Wzrost', icon: '📏', image: false, suffix: ' cm' }
+            ];
+
+            hintConfigs.forEach(hint => {
+                const hintElement = document.getElementById(`hint-${hint.key}`);
+                const valueElement = hintElement.querySelector('.hint-visual-value');
+                const imageContainer = hintElement.querySelector('.hint-visual-image');
+                const isCorrect = gameState.hints[hint.key];
+                const value = getHintValue(hint.key, hint.suffix);
+                const imageSrc = hint.image
+                    ? getHintImage(hint.key, hint.key === 'nationality'
+                        ? resolveImagePath(gameState.currentPlayer.flagImage, '/images/placeholder.svg', 'flags')
+                        : hint.key === 'league'
+                            ? resolveImagePath(gameState.currentPlayer.leagueImage, '/images/placeholder.svg', 'leagues')
+                            : resolveImagePath(gameState.currentPlayer.clubImage, '/images/placeholder.svg', 'clubs'))
+                    : null;
+
+                hintElement.classList.toggle('correct', isCorrect);
+                valueElement.textContent = value;
+
+                const existingImg = imageContainer.querySelector('img');
+                const existingIcon = imageContainer.querySelector('.hint-icon');
+
+                if (hint.image) {
+                    if (existingIcon) {
+                        existingIcon.remove();
+                    }
+                    let img = existingImg;
+                    if (!img) {
+                        img = document.createElement('img');
+                        imageContainer.appendChild(img);
+                    }
+                    if (img.getAttribute('src') !== imageSrc) {
+                        img.src = imageSrc;
+                    }
+                    img.alt = hint.label;
+                    img.onerror = () => { img.src = '/images/placeholder.svg'; };
+                } else {
+                    if (existingImg) {
+                        existingImg.remove();
+                    }
+                    let icon = existingIcon;
+                    if (!icon) {
+                        icon = document.createElement('div');
+                        icon.className = 'hint-icon';
+                        imageContainer.appendChild(icon);
+                    }
+                    if (icon.textContent !== hint.icon) {
+                        icon.textContent = hint.icon;
+                    }
+                }
+            });
+
+            // Update guessed players list
+            updateGuessedPlayersList();
+        }
+
+        // Update Guessed Players List
+        function updateGuessedPlayersList() {
+            const guessedList = document.getElementById('guessedList');
+            guessedList.innerHTML = '';
+
+            gameState.revealed.forEach(player => {
+                const div = document.createElement('div');
+                div.className = 'guessed-item';
+                
+                let matchingAttributes = [];
+                if (player.position === gameState.currentPlayer.position) matchingAttributes.push('✓');
+                if (player.nationality === gameState.currentPlayer.nationality) matchingAttributes.push('✓');
+                if (player.league === gameState.currentPlayer.league) matchingAttributes.push('✓');
+                if (player.club === gameState.currentPlayer.club) matchingAttributes.push('✓');
+                if (player.preferredFoot === gameState.currentPlayer.preferredFoot) matchingAttributes.push('✓');
+                if (Math.abs(player.height - gameState.currentPlayer.height) <= 2) matchingAttributes.push('✓');
+                
+                const matchCount = matchingAttributes.length;
+                
+                div.innerHTML = `
+                    <span>${player.name}</span>
+                    <span class="guessed-item-icon">${matchCount > 0 ? '🟢 ' + matchCount : '❌'}</span>
+                `;
+                guessedList.appendChild(div);
+            });
+        }
+
+        // Search Players
+        const playerInput = document.getElementById('playerInput');
+        playerInput.addEventListener('input', async (e) => {
+            const query = e.target.value;
+            if (query.length < 1) {
+                document.getElementById('suggestions').style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/players/search?q=${encodeURIComponent(query)}`);
+                const suggestions = await response.json();
+                
+                const suggestionsDiv = document.getElementById('suggestions');
+                suggestionsDiv.innerHTML = '';
+
+                if (suggestions.length === 0) {
+                    suggestionsDiv.style.display = 'none';
+                    return;
+                }
+
+                suggestions.forEach(player => {
+                    const div = document.createElement('div');
+                    div.className = 'search-suggestion';
+                    div.innerHTML = `
+                        <div class="suggestion-name">${player.name}</div>
+                        <div class="suggestion-club">${player.club}</div>
+                    `;
+                    div.onclick = () => selectPlayer(player.id, player.name);
+                    suggestionsDiv.appendChild(div);
+                });
+
+                suggestionsDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error searching players:', error);
+            }
+        });
+
+        // Enter key to submit
+        playerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitGuess();
+            }
+        });
+
+        // Select Player
+        function selectPlayer(playerId, playerName) {
+            document.getElementById('playerInput').value = playerName;
+            document.getElementById('suggestions').style.display = 'none';
+            setTimeout(() => submitGuess(playerId), 100);
+        }
+
+        // Submit Guess
+        async function submitGuess(playerId = null) {
+            if (gameState.gameOver) return;
+
+            if (!playerId) {
+                const playerName = document.getElementById('playerInput').value;
+                const matching = gameState.allPlayers.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+                if (!matching) {
+                    showNotification('❌ Zawodnik nie znaleziony. Wybierz z listy podpowiedzi.');
+                    return;
+                }
+                playerId = matching.id;
+            }
+
+            try {
+                const response = await fetch('/api/guess', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        playerId: gameState.currentPlayer.id,
+                        guessId: playerId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.correct) {
+                    // Correct guess!
+                    showNotification('🎉 Poprawnie! To był ' + gameState.currentPlayer.name + '!');
+                    endGame(true, result.player);
+                } else {
+                    // Wrong guess
+                    gameState.attempts--;
+                    gameState.score = Math.max(10, gameState.score - 10);
+                    
+                    // Add to revealed players list and save last guess
+                    gameState.revealed.push(result.player);
+                    gameState.lastGuess = result.player;
+
+                    // Check hints
+                    checkHints(result.player);
+
+                    document.getElementById('playerInput').value = '';
+                    document.getElementById('suggestions').style.display = 'none';
+
+                    showNotification('❌ Nie to! Tracisz 10 pkt. Pozostałe próby: ' + gameState.attempts);
+
+                    if (gameState.attempts === 0) {
+                        endGame(false, result.player);
+                    } else {
+                        updateUI();
+                        document.getElementById('playerInput').focus();
+                    }
+                }
+            } catch (error) {
+                console.error('Error submitting guess:', error);
+                showNotification('⚠️ Błąd połączenia. Spróbuj ponownie.');
+            }
+        }
+
+        // Show Notification
+        function showNotification(message) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.classList.add('hide');
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        // Check Hints - kompares guessed player with current player
+        function checkHints(guessedPlayer) {
+            if (guessedPlayer.position === gameState.currentPlayer.position) {
+                gameState.hints.position = true;
+            }
+            if (guessedPlayer.nationality === gameState.currentPlayer.nationality) {
+                gameState.hints.nationality = true;
+            }
+            if (guessedPlayer.league === gameState.currentPlayer.league) {
+                gameState.hints.league = true;
+            }
+            if (guessedPlayer.club === gameState.currentPlayer.club) {
+                gameState.hints.club = true;
+            }
+            if (guessedPlayer.preferredFoot === gameState.currentPlayer.preferredFoot) {
+                gameState.hints.preferredFoot = true;
+            }
+            // Height tolerance: ±2 cm
+            if (Math.abs(guessedPlayer.height - gameState.currentPlayer.height) <= 2) {
+                gameState.hints.height = true;
+            }
+        }
+
+        // End Game
+        function endGame(won, player) {
+            gameState.gameOver = true;
+            
+            const attemptsUsed = 8 - gameState.attempts;
+            
+            document.getElementById('gameContainer').classList.remove('active');
+            document.getElementById('gameOverScreen').classList.add('active');
+            document.getElementById('correctPlayerName').textContent = gameState.currentPlayer.name;
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('attemptsUsed').textContent = attemptsUsed;
+            document.getElementById('resultText').textContent = won ? '✓ Zgadłeś!' : '✗ Nie zgadłeś';
+            document.getElementById('gameOverTitle').textContent = won ? '🎉 ZWYCIĘSTWO!' : '😢 KONIEC GRY';
+            
+            if (won) {
+                document.getElementById('gameOverTitle').style.color = '#23c66d';
+            } else {
+                document.getElementById('gameOverTitle').style.color = '#e94560';
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
